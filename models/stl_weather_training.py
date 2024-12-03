@@ -12,46 +12,50 @@ holidays = pd.read_csv('../data/holiday_dates.csv')
 school_closures = pd.to_datetime(school_closures['dt']).astype(int) // 10**9
 holidays = pd.to_datetime(holidays['dt']).astype(int) // 10**9
 
-# daily_weather = weather_data.groupby(weather_data['date'].dt.date).agg({
-#     'temp': 'mean',
-#     'visibility': 'mean',
-#     'dew_point': 'mean',
-#     'feels_like':   'mean',
-#     'temp_min': 'min',
-#     'temp_max': 'max',
-#     'pressure': 'mean',
-#     'humidity': 'mean',
-#     'wind_speed': 'mean',
-#     'wind_gust': 'max',
-#     'rain_1h': 'sum',
-#     'snow_1h': 'sum',
-#     'clouds_all': 'mean',
-#     'weather_id': 'max'
-# }).reset_index()
+
+daily_weather = weather_data.groupby(pd.to_datetime(weather_data['dt'], unit='s').dt.date).agg({
+    'temp': 'mean',
+    'visibility': 'mean',
+    'dew_point': 'mean',
+    'feels_like':   'mean',
+    'temp_min': 'min',
+    'temp_max': 'max',
+    'pressure': 'mean',
+    'humidity': 'mean',
+    'wind_speed': 'mean',
+    'wind_gust': 'max',
+    'rain_1h': 'sum',
+    'snow_1h': 'sum',
+    'clouds_all': 'mean',
+    'weather_id': 'max'
+}).reset_index()
+
+daily_weather['dt'] = pd.to_datetime(daily_weather['dt']).astype(int) // 10**9
 
 # Create target variable (1 = closed, 0 = open)
-weather_data['school_closed'] = weather_data['dt'].isin(school_closures).astype(int)
-weather_data['is_weekend'] = pd.to_datetime(weather_data['dt'], unit='s').dt.weekday.isin([5, 6]).astype(int)
-weather_data['is_holiday'] = weather_data['dt'].isin(holidays).astype(int)
+daily_weather['school_closed'] = daily_weather['dt'].isin(school_closures).astype(int)
+daily_weather['is_weekend'] = pd.to_datetime(daily_weather['dt'], unit='s').dt.weekday.isin([5, 6]).astype(int)
+daily_weather['is_holiday'] = daily_weather['dt'].isin(holidays).astype(int)
 
 # Add COVID closure feature
 covid_start = int(datetime.strptime('2020-03-15', '%Y-%m-%d').timestamp())
 covid_end = int(datetime.strptime('2021-06-30', '%Y-%m-%d').timestamp())
-weather_data['is_covid_period'] = (
-    (weather_data['dt'] >= covid_start) & (weather_data['dt'] <= covid_end)
+
+daily_weather['is_covid_period'] = (
+    (daily_weather['dt'] >= covid_start) & (daily_weather['dt'] <= covid_end)
 ).astype(int)
 
 # Assign weights
-weather_data['weight'] = 1.0  # Default weight
-weather_data.loc[weather_data['is_weekend'] == 1, 'weight'] = 0.1  # Lower weight for weekends
-weather_data.loc[weather_data['is_holiday'] == 1, 'weight'] = 0.1  # Lower weight for holidays
-weather_data.loc[weather_data['is_covid_period'] == 1, 'weight'] = 0.0  # Ignore COVID period
+daily_weather['weight'] = 1.0  # Default weight
+daily_weather.loc[daily_weather['is_weekend'] == 1, 'weight'] = 0.1  # Lower weight for weekends
+daily_weather.loc[daily_weather['is_holiday'] == 1, 'weight'] = 0.1  # Lower weight for holidays
+daily_weather.loc[daily_weather['is_covid_period'] == 1, 'weight'] = 0.0  # Ignore COVID period
 
 
 # Features and target
-X = weather_data.drop(['school_closed', 'weight', 'dt', 'dt_iso' , 'timezone', 'city_name', 'lat', 'lon', 'weather_main', 'weather_description' ,'weather_icon'], axis=1)
-y = weather_data['school_closed']
-weights = weather_data['weight']
+X = daily_weather
+y = daily_weather['school_closed']
+weights = daily_weather['weight']
 
 # Split data
 X_train, X_test, y_train, y_test, weights_train, weights_test = train_test_split(
