@@ -9,13 +9,12 @@ openai.api_key = api_key
 
 class RegressionExplainerAgent:
     def __init__(self, model, weather_api):
-        self.model = model  # Your trained linear regression model
-        self.weather_api = weather_api  # Weather data integration
+        self.model = model
+        self.weather_api = weather_api
         self.user_context = {}
 
     def fetch_weather(self, location):
         """Fetch weather data for the given location."""
-        # Replace with your weather API integration
         return {
             "temperature": 30,
             "snowfall": 8,
