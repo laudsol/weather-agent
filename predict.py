@@ -1,15 +1,14 @@
 import pandas as pd
 import joblib
 import numpy as np
+from llm_factory import generate_llm_response
 
 class SchoolClosureAgent:
     def __init__(self, model_path, feature_names):
-        # Load the trained model
         self.model = joblib.load(model_path)
         self.feature_names = feature_names
 
     def get_user_location(self):
-        """Prompt the user for a city or ZIP code."""
         location = input("Please enter your city or ZIP code: ").strip()
         return location
 
@@ -46,13 +45,8 @@ class SchoolClosureAgent:
         # Convert weather features into DataFrame
         X_input = pd.DataFrame([weather_features])
 
-        # Predict probability
-        probability = self.model.predict_proba(X_input)[0][1]  # Probability of closure
-
-        # Get feature importances
+        probability = self.model.predict_proba(X_input)[0][1]
         importances = self.model.feature_importances_
-
-        # Create a DataFrame of features and their importances
         feature_importances = pd.DataFrame({
             'feature': self.feature_names,
             'importance': importances
@@ -62,34 +56,42 @@ class SchoolClosureAgent:
 
     def generate_response(self, probability, feature_importances):
         """Generate a response to the user."""
-        # Get the top 5 most important features
         top_features = feature_importances.head(5)
 
-        # Create a human-readable explanation
         explanation = "The most influential factors contributing to this prediction are:\n"
         for index, row in top_features.iterrows():
             feature_name = row['feature'].replace('_', ' ').title()
             explanation += f"- **{feature_name}** (importance score: {row['importance']:.2f})\n"
 
         response = f"""
-There is a **{probability * 100:.1f}% chance** that schools will be closed tomorrow.
+        There is a **{probability * 100:.1f}% chance** that schools will be closed tomorrow.
+        {explanation}
+        """
 
-{explanation}
-"""
         return response
+    
 
     def handle_interaction(self):
         print("Welcome to the School Closure Prediction Agent!")
         print("I can help you predict school closures based on weather conditions.\n")
 
-        location = self.get_user_location()
-        weather_data = self.fetch_weather_data(location)
-        probability, feature_importances = self.predict_closure(weather_data)
-        response = self.generate_response(probability, feature_importances)
-        print(response)
+        user_input = input("How can I assist you today? (e.g., 'Will schools close tomorrow in Boston?'): ").strip()
+
+        while True:
+            if "exit" in user_input.lower():
+                print("Thank you for using the School Closure Prediction Agent. Goodbye!")
+                break
+                        
+            location = self.get_user_location()
+            weather_data = self.fetch_weather_data(location)
+        
+            closure_probability, factors = self.predict_closure(weather_data)
+            response = generate_llm_response(location, weather_data, closure_probability, factors.head(5))
+            print(response)
+            user_input = input("Can I help you with anything else?").strip()
+
 
 if __name__ == "__main__":
-    # Define the feature names (ensure these match your trained model)
     feature_names = [
         "temp", "visibility", "dew_point", "feels_like", "temp_min", "temp_max",
         "pressure", "humidity", "wind_speed", "wind_gust", "wind_deg",
@@ -97,6 +99,5 @@ if __name__ == "__main__":
         "is_weekend", "is_holiday", "is_covid_period"
     ]
 
-    # Initialize the agent
     agent = SchoolClosureAgent(model_path='./models/school_closure_model.pkl', feature_names=feature_names)
     agent.handle_interaction()

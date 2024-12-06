@@ -65,10 +65,25 @@ class RegressionExplainerAgent:
         - The baseline prediction (without features) is {explanation['intercept']:.2f}.
 
         Explain this to the user in simple terms and provide insights into why this prediction was made.
+        
         Respond to the user's query: "{user_input}"
         """
 
-        response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "system", "content": "You are an assistant helping users with school closure predictions."}, {"role": "user", "content": prompt}], max_tokens=300, temperature=0.7)        
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo", 
+            messages=[
+                {
+                    "role": "system", 
+                    "content": "You are an assistant helping users with school closure predictions."
+                }, 
+                {
+                    "role": "user", 
+                    "content": prompt
+                }
+            ], 
+            max_tokens=300, 
+            temperature=0.7
+        )        
         return response['choices'][0]['message']['content']
 
     def handle_interaction(self):
