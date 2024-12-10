@@ -1,5 +1,6 @@
 import unittest
 from llm_factory import explain_school_closure, classify_user_intent, validate_location_info, extract_location
+from predict import get_valid_location
 
 class TestOpenAICalls(unittest.TestCase):
     
@@ -63,7 +64,6 @@ class TestOpenAICalls(unittest.TestCase):
         expected = expected_results[test_case]
 
         self.assertEqual(response, expected)
-
 
 if __name__ == '__main__':
     unittest.main()

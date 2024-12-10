@@ -2,10 +2,10 @@ import pandas as pd
 import joblib
 import numpy as np
 from llm_factory import explain_school_closure, classify_user_intent, validate_location_info, extract_location
+from model_mapper import zip_to_model
 
 class SchoolClosureAgent:
-    def __init__(self, model_path, feature_names):
-        self.model = joblib.load(model_path)
+    def __init__(self, feature_names):
         self.feature_names = feature_names
 
     def fetch_weather_data(self, location):
@@ -38,7 +38,6 @@ class SchoolClosureAgent:
 
     def predict_closure(self, weather_features):
         """Predict the probability of school closure and explain feature importance."""
-        # Convert weather features into DataFrame
         X_input = pd.DataFrame([weather_features])
 
         probability = self.model.predict_proba(X_input)[0][1]
@@ -68,17 +67,17 @@ class SchoolClosureAgent:
     
     def get_valid_location(self, location_validator, user_input):
             if (location_validator == 'specific'):
-                print('specific')
                 return extract_location(user_input)
-            elif (location_validator == 'different-specfiic'):
-                location_validator = input("Sorry, I'm having trouble determinig the location you are inquiring about. Can you please clarify? (e.g. enter a city name or zip code)").strip()
-                return self.get_valid_location(location_validator)
-            elif (location_validator == 'unspecific'):
-                location_validator = input("Please specify the location you are inquiring about: (e.g. enter a city name or zip code)").strip()
-                return self.get_valid_location(location_validator)
-            else: 
-                location_validator = input("Please specify the location you are inquiring about: (e.g. enter a city name or zip code)").strip()
-                return self.get_valid_location(location_validator)
+            
+            message_map = {
+                'different-specific': 'Sorry, it seems you have entered multiple locations, please enter a single location: (e.g. enter a city name or zip code)',
+                'unspecific': 'Sorry, I\'m having trouble determinig the location you are inquiring about. Can you please clarify? (e.g. enter a city name or zip code)',
+                'none': 'Please specify the location you are inquiring about: (e.g. enter a city name or zip code)'
+            }
+            new_message = message_map[location_validator]
+            new_input = input(new_message).strip()
+            new_location_validator = validate_location_info(new_input)
+            return self.get_valid_location(new_location_validator, new_input)
 
     def handle_interaction(self):
         print("Welcome to the School Closure Prediction Agent!")
@@ -95,10 +94,17 @@ class SchoolClosureAgent:
             elif input_assessment == 'irrelevant':
                 print("I'm sorry that's not something I can help with. Please try another request:")
             else: 
-
                 location_validator = validate_location_info(user_input)
                 location = self.get_valid_location(location_validator, user_input)
                 
+                if location in zip_to_model:
+                    model_path = f"./models/{zip_to_model[location]}.pkl"
+                else:
+                    print("I'm sorry I don't yet have data on that location yet!")
+                    break
+
+                self.model = joblib.load(model_path)
+
                 weather_data = self.fetch_weather_data(location)
                 closure_probability, factors = self.predict_closure(weather_data)
                 response = explain_school_closure(location, weather_data, closure_probability, factors.head(5))
@@ -114,5 +120,5 @@ if __name__ == "__main__":
         "is_weekend", "is_holiday", "is_covid_period"
     ]
 
-    agent = SchoolClosureAgent(model_path='./models/school_closure_model.pkl', feature_names=feature_names)
+    agent = SchoolClosureAgent(feature_names=feature_names)
     agent.handle_interaction()
