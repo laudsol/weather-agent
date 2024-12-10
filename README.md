@@ -20,3 +20,18 @@ Want:
 
 Store user inputs for later....
 Deal with catches
+
+
+
+User Paths
+INITIAL INTERACTION: "How can I help you?" Use LLM to determine if I can help. If I can help and they have included location, go directly to model. Need prompt for location or to let user know I can't help.
+
+Need to figure out best way to control user interactions. Should I have switch statements in my code that sit on top of different prompts? Other ways? 
+1) Determine if I can help user with their request - need to prompt telling ai what I can do and asking if i should let user continue with prompt
+2) If I can move forward, ask prompt to return location info. Need to check against my data to determine if I have model for that location.
+3) Can then run model and return response. Ask if there is any additional info that can help me
+4) Is there a way for me to train a model or use a prompt to get a better response from the AI based on additional info?
+5) Think about how I can make responses really helpful to user 
+
+
+Can I do RAG (retreival augmented generation)?

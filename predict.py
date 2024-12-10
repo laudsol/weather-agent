@@ -1,16 +1,12 @@
 import pandas as pd
 import joblib
 import numpy as np
-from llm_factory import generate_llm_response
+from llm_factory import explain_school_closure, classify_user_intent, validate_location_info, extract_location
 
 class SchoolClosureAgent:
     def __init__(self, model_path, feature_names):
         self.model = joblib.load(model_path)
         self.feature_names = feature_names
-
-    def get_user_location(self):
-        location = input("Please enter your city or ZIP code: ").strip()
-        return location
 
     def fetch_weather_data(self, location):
         """Simulate fetching weather data for the given location."""
@@ -70,6 +66,19 @@ class SchoolClosureAgent:
 
         return response
     
+    def get_valid_location(self, location_validator, user_input):
+            if (location_validator == 'specific'):
+                print('specific')
+                return extract_location(user_input)
+            elif (location_validator == 'different-specfiic'):
+                location_validator = input("Sorry, I'm having trouble determinig the location you are inquiring about. Can you please clarify? (e.g. enter a city name or zip code)").strip()
+                return self.get_valid_location(location_validator)
+            elif (location_validator == 'unspecific'):
+                location_validator = input("Please specify the location you are inquiring about: (e.g. enter a city name or zip code)").strip()
+                return self.get_valid_location(location_validator)
+            else: 
+                location_validator = input("Please specify the location you are inquiring about: (e.g. enter a city name or zip code)").strip()
+                return self.get_valid_location(location_validator)
 
     def handle_interaction(self):
         print("Welcome to the School Closure Prediction Agent!")
@@ -78,18 +87,24 @@ class SchoolClosureAgent:
         user_input = input("How can I assist you today? (e.g., 'Will schools close tomorrow in Boston?'): ").strip()
 
         while True:
+            input_assessment = classify_user_intent(user_input)
+
             if "exit" in user_input.lower():
                 print("Thank you for using the School Closure Prediction Agent. Goodbye!")
                 break
-                        
-            location = self.get_user_location()
-            weather_data = self.fetch_weather_data(location)
-        
-            closure_probability, factors = self.predict_closure(weather_data)
-            response = generate_llm_response(location, weather_data, closure_probability, factors.head(5))
-            print(response)
-            user_input = input("Can I help you with anything else?").strip()
+            elif input_assessment == 'irrelevant':
+                print("I'm sorry that's not something I can help with. Please try another request:")
+            else: 
 
+                location_validator = validate_location_info(user_input)
+                location = self.get_valid_location(location_validator, user_input)
+                
+                weather_data = self.fetch_weather_data(location)
+                closure_probability, factors = self.predict_closure(weather_data)
+                response = explain_school_closure(location, weather_data, closure_probability, factors.head(5))
+                print(response)
+                
+            user_input = input("Can I help you with anything else?").strip()
 
 if __name__ == "__main__":
     feature_names = [
