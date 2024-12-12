@@ -48,22 +48,6 @@ class SchoolClosureAgent:
         }).sort_values(by='importance', ascending=False)
 
         return probability, feature_importances
-
-    def generate_response(self, probability, feature_importances):
-        """Generate a response to the user."""
-        top_features = feature_importances.head(5)
-
-        explanation = "The most influential factors contributing to this prediction are:\n"
-        for index, row in top_features.iterrows():
-            feature_name = row['feature'].replace('_', ' ').title()
-            explanation += f"- **{feature_name}** (importance score: {row['importance']:.2f})\n"
-
-        response = f"""
-        There is a **{probability * 100:.1f}% chance** that schools will be closed tomorrow.
-        {explanation}
-        """
-
-        return response
     
     def get_valid_location(self, location_validator, user_input):
             if (location_validator == 'specific'):
@@ -78,6 +62,16 @@ class SchoolClosureAgent:
             new_input = input(new_message).strip()
             new_location_validator = validate_location_info(new_input)
             return self.get_valid_location(new_location_validator, new_input)
+
+    # def weight_estimate(closure_probability, qualitative_factors):
+    #     if (qualitative_factors.type == 'school_policy'):
+    #         # if weather is in agreement with policy ONLY add if estimate is not high
+    #         # if weather exceeds policy ONLY add if estimate is not very high
+    #         # if weather is lower than policy ONLY subtract if estimate is high
+    #     elif(qualitative_factors.type == 'prior_closure'):
+    #         # if more than 3 closures ONLY subtract if estimate not very high, 
+    #     else:
+    #         # ask openAI for an estiamte???
 
     def handle_interaction(self):
         print("Welcome to the School Closure Prediction Agent!")
@@ -100,7 +94,7 @@ class SchoolClosureAgent:
                 if location in zip_to_model:
                     model_path = f"./models/{zip_to_model[location]}.pkl"
                 else:
-                    print("I'm sorry I don't yet have data on that location yet!")
+                    print(f"I'm sorry - I don't yet have weather data for {location} yet!")
                     break
 
                 self.model = joblib.load(model_path)
@@ -109,6 +103,9 @@ class SchoolClosureAgent:
                 closure_probability, factors = self.predict_closure(weather_data)
                 response = explain_school_closure(location, weather_data, closure_probability, factors.head(5))
                 print(response)
+
+                additional_input = input("I can also udpate my assessment based on additional factors. For example, you can provide the school\'s closure policy or tell me how many days scools has closed for weather thus far this year.").strip()
+                additional_input = classify_additional_factors(additional_input)
                 
             user_input = input("Can I help you with anything else?").strip()
 

@@ -1,6 +1,7 @@
 import unittest
-from llm_factory import explain_school_closure, classify_user_intent, validate_location_info, extract_location
-from predict import get_valid_location
+from llm_factory import explain_school_closure, classify_user_intent, validate_location_info, extract_location, classify_additional_factors
+
+# to test: python3 -m unittest test.TestOpenAICalls.test_function_name
 
 class TestOpenAICalls(unittest.TestCase):
     
@@ -65,5 +66,34 @@ class TestOpenAICalls(unittest.TestCase):
 
         self.assertEqual(response, expected)
 
+    def test_classify_additional_factors(self):
+        test_case = 2
+        test_inputs = [
+            'School policy says that school will close if there are two or more inches of snow. School hasn\'nt closed yet this year.',
+            'School has been closed unexpectedly for four days this year but only three were related to weather. One of the teachers told me she thought school wouldn\'t close tomorrow.',
+            'Administration sent an email remining us school only closes if there is four inches of snow'
+        ]
+        expected_results = [
+            [['school_policy', 2], ['prior_closure', 0]],
+            [['prior_closure', 3], ['other', '']],
+            [['school_policy', 4]]
+        ]
+        input = test_inputs[test_case]
+        response = classify_additional_factors(input)
+        expected = expected_results[test_case]
+
+        response_tracker = 1
+        print(response)
+        print(expected)
+
+        print(type(response))
+
+        for i, subarr in enumerate(response):
+            if(subarr[0] != expected[i][0] or subarr[1] != expected[i][1]):
+                response_tracker = 0
+
+        self.assertEqual(1, response_tracker)
+
 if __name__ == '__main__':
     unittest.main()
+
