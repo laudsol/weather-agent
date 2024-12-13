@@ -82,17 +82,7 @@ class TestOpenAICalls(unittest.TestCase):
         response = classify_additional_factors(input)
         expected = expected_results[test_case]
 
-        response_tracker = 1
-        print(response)
-        print(expected)
-
-        print(type(response))
-
-        for i, subarr in enumerate(response):
-            if(subarr[0] != expected[i][0] or subarr[1] != expected[i][1]):
-                response_tracker = 0
-
-        self.assertEqual(1, response_tracker)
+        self.assertEqual(response, expected)
 
 if __name__ == '__main__':
     unittest.main()
