@@ -55,7 +55,7 @@ class SchoolClosureAgent:
             
             message_map = {
                 'different-specific': 'Sorry, it seems you have entered multiple locations, please enter a single location: (e.g. enter a city name or zip code)',
-                'unspecific': 'Sorry, I\'m having trouble determinig the location you are inquiring about. Can you please clarify? (e.g. enter a city name or zip code)',
+                'unspecific': 'Sorry, I\'m having trouble determining the location you are inquiring about. Can you please clarify? (e.g. enter a city name or zip code)',
                 'none': 'Please specify the location you are inquiring about: (e.g. enter a city name or zip code)'
             }
             new_message = message_map[location_validator]
