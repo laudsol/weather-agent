@@ -61,7 +61,11 @@ def classify_user_intent(user_input):
         max_tokens=10, 
         temperature=0
     )
-    return assement['choices'][0]['message']['content']
+    try:
+        return assement['choices'][0]['message']['content']
+    except (json.JSONDecodeError, KeyError, TypeError) as e:
+        return f"Error parsing response: {e}"
+    
 
 def classify_additional_factors(additional_input):
     prompt = f"""
@@ -103,6 +107,7 @@ def classify_additional_factors(additional_input):
         result = response['choices'][0]['message']['content'].strip()
         parsed_result = json.loads(result)
         
+        # check if the data has been returned in the correct format 
         if isinstance(parsed_result, list) and all(isinstance(i, list) and len(i) == 2 for i in parsed_result):
             return parsed_result
         else:
@@ -139,7 +144,10 @@ def validate_location_info(user_input):
         max_tokens=10, 
         temperature=0
     )
-    return response['choices'][0]['message']['content']
+    try: 
+        return response['choices'][0]['message']['content']
+    except (json.JSONDecodeError, KeyError, TypeError) as e:
+        return f"Error parsing response: {e}"
     
 
 def extract_location(user_input):
@@ -161,4 +169,8 @@ def extract_location(user_input):
         max_tokens=10, 
         temperature=0
     )
-    return response['choices'][0]['message']['content']
+
+    try:
+        return response['choices'][0]['message']['content']
+    except (json.JSONDecodeError, KeyError, TypeError) as e:
+        return f"Error parsing response: {e}"
