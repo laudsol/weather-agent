@@ -9,9 +9,8 @@ class SchoolClosureAgent:
         self.feature_names = feature_names
 
     def fetch_weather_data(self, location):
-        """Simulate fetching weather data for the given location."""
         print(f"\nFetching weather data for {location}...\n")
-        # Hardcoded weather data (simulate API response)
+        # Hardcoded weather data to simulate an API response
         weather_data = {
             'temp': 23,           # Average temperature in Fahrenheit
             'visibility': 5,      # Visibility in miles
@@ -37,7 +36,6 @@ class SchoolClosureAgent:
         return weather_data
 
     def predict_closure(self, weather_features):
-        """Predict the probability of school closure and explain feature importance."""
         X_input = pd.DataFrame([weather_features])
 
         probability = self.model.predict_proba(X_input)[0][1]
@@ -68,7 +66,7 @@ class SchoolClosureAgent:
             # Increase if weather exceeds policy AND estimate is not very high
         if (policy_delta > 1.2 and estimate < 0.8):
             return 0.2
-            # Decrease if weather is lower than policy AND if estimate is high
+            # Decrease if weather is below policy AND if estimate is high
         elif (policy_delta < 0.8 and estimate > 0.7):
             return -0.2
             # Increase if weather is in agreement with policy AND if estimate is not high
@@ -78,8 +76,8 @@ class SchoolClosureAgent:
         return 0
 
     def assess_prior_closure(self, closure_days, probability):
-        # according to the data, max closures days per year is 3, with majority at 2 days
-        # reduce probability for each day above 2 days
+        # In the current dataset, max closures days per year is 3, with majority at 2 days
+        # Reduce probability for each day above 2 days
         max_reduction = probability / 2
         if (closure_days == 2):
             return -max_reduction * 0.333
@@ -109,13 +107,12 @@ class SchoolClosureAgent:
         elif (updated_estimate < estimate):
             response += f"I estimate the probability of school closure has decreased from {estimate} to {updated_estimate}"
         else:
-            response += f"I still estimate the probability of school closure is {estimate}"
+            response += f"I estimate the probability of school closure is still {estimate}"
 
         return response
 
     def handle_interaction(self):
-        print("Welcome to the School Closure Prediction Agent!")
-        print("I can help you predict school closures based on weather conditions.\n")
+        print("Welcome to the School Closure Prediction Agent! I can help you predict school closures based on weather conditions.\n")
 
         user_input = input("How can I assist you today? (e.g., 'Will schools close tomorrow in Boston?'): ").strip()
 
